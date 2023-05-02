@@ -1,0 +1,53 @@
+#include<ESP8266WiFi.h>
+#include<WiFiUDP.h>
+
+#define WIFI_SSID "Sochna bhi mat!"
+#define WIFI_PASS "paatolee"
+#define UDP_PORT 9500
+
+WiFiUDP UDP;
+char packet[255];
+char reply[]="Packet recieved successfully!";
+
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(115200);
+  Serial.println();
+  WiFi.begin(WIFI_SSID,WIFI_PASS);
+  Serial.print("Connecting to ");
+  Serial.print(WIFI_SSID);
+  while(WiFi.status() != WL_CONNECTED)
+  {
+    delay(100);
+    Serial.print(".");
+  }   
+  Serial.println();
+  Serial.print("Connected! IP Address: ");
+  Serial.println(WiFi.localIP());
+
+  UDP.begin(UDP_PORT);
+  Serial.print("Listening on UDP Port ");
+  Serial.println(UDP_PORT);
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  int packetSize = UDP.parsePacket();
+  if(packetSize)
+  {
+    Serial.print("Recieved packet! Size: ");
+    Serial.println(packetSize);
+    int len = UDP.read(packet,255);
+    if(len>0)
+    {
+      packet[len]='\0';
+    }
+    Serial.print("Packet recieved: ");
+    Serial.println(packet);
+    UDP.beginPacket(UDP.remoteIP(),UDP.remotePort());
+    UDP.write(reply);
+    UDP.endPacket();
+  }
+
+}

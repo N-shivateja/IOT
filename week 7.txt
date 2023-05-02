@@ -1,0 +1,62 @@
+#include <ESP8266WiFi.h>
+#include "secrets.h"
+#include "ThingSpeak.h"
+
+#include "DHT.h"
+
+#define DHTPIN D5
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN,DHTTYPE);
+
+char ssid[] = SECRET_SSID;  
+char pass[] = SECRET_PASS;  
+int keyIndex = 0;      
+WiFiClient  client;
+
+unsigned long myChannelNumber = SECRET_CH_ID;
+const char * myWriteAPIKey = SECRET_WRITE_APIKEY;
+
+float temp = 0,h=0;
+
+void setup() {
+  Serial.begin(115200);  
+  while (!Serial) {
+    ;
+  }
+  WiFi.mode(WIFI_STA);
+  ThingSpeak.begin(client);
+  dht.begin();
+}
+
+void loop() {
+  if(WiFi.status() != WL_CONNECTED){
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(SECRET_SSID);
+    while(WiFi.status() != WL_CONNECTED){
+      WiFi.begin(ssid, pass);  
+      Serial.print(".");
+      delay(5000);    
+    }
+    Serial.println("\nConnected.");
+  }
+  temp=dht.readTemperature();
+  Serial.println(F("Temperature: "));
+  Serial.println(temp);
+
+  h=dht.readHumidity();
+  Serial.println(F("Humidity: "));
+  Serial.println(h);
+  ThingSpeak.setField(1,temp);
+   ThingSpeak.setField(2, h);
+  int x = ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);
+//  int x = ThingSpeak.writeField(myChannelNumber, 1, temp, myWriteAPIKey);
+  if(x == 200){
+    Serial.println("Channel update successful.");
+  }
+  else{
+    Serial.println("Problem updating channel. HTTP error code " + String(x));
+  }
+ 
+  delay(2000);
+}

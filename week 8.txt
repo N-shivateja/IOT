@@ -1,0 +1,68 @@
+#include <ESP8266WiFi.h>
+#include "secrets.h"
+#include "ThingSpeak.h" 
+char ssid[] = SECRET_SSID;  
+char pass[] = SECRET_PASS;  
+int keyIndex = 0;            
+WiFiClient  client;
+int statusCode = 0;
+int field[2] = {1,2};
+float hum,temp;
+void setup() {
+  Serial.begin(115200);     
+  while (!Serial) {
+    ; 
+  }
+ 
+  WiFi.mode(WIFI_STA);
+ 
+  ThingSpeak.begin(client);  // Initialize ThingSpeak
+
+  // Connect or reconnect to WiFi
+  if(WiFi.status() != WL_CONNECTED){
+    Serial.print("Attempting to connect to SSID: ");
+    Serial.println(SECRET_SSID);
+    while(WiFi.status() != WL_CONNECTED){
+      WiFi.begin(ssid, pass); 
+      Serial.print(".");
+      delay(5000);    
+    }
+    Serial.println("\nConnected");
+  }
+}
+
+void loop() {
+
+   
+    
+    statusCode = ThingSpeak.readMultipleFields(SECRET_CH_ID,SECRET_READ_APIKEY);
+   
+    if(statusCode == 200)
+    {
+      // Fetch the stored data
+
+      temp  = ThingSpeak.getFieldAsInt(field[0]); 
+      hum = ThingSpeak.getFieldAsFloat(field[1]);
+     
+     
+     
+    }
+    else{
+      Serial.println("Problem reading channel. HTTP error code " + String(statusCode));
+    }
+ 
+    Serial.println();
+    delay(5000);
+      Serial.print("Temperature: ");
+      Serial.print(temp);
+      Serial.print("  Humidity: ");
+      Serial.print(hum);
+}
+
+
+SECRETS:
+#define SECRET_SSID "Paisal Kati Vaduko" 
+#define SECRET_PASS "dhoni123" 
+
+#define SECRET_CH_ID  2062878
+#define SECRET_READ_APIKEY "I1C84AIK4KY9UW12"
